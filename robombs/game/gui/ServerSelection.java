@@ -150,7 +150,7 @@ public class ServerSelection implements DataChangeListener, GUIListener {
         connect = new Button(338, 409, 138, 19);
         connect.setLabel("connect");
         
-        refresh = new Button(338, 367, 138, 19);
+        refresh = new Button(338, 313, 138, 19);
         refresh.setLabel("Refresh");
         
         ready = new Button(185, 409, 138, 19);
@@ -906,6 +906,7 @@ public class ServerSelection implements DataChangeListener, GUIListener {
 		nameLabel.setVisible(enabled);
 		startServer.setVisible(enabled);
 		ready.setVisible(enabled);
+		refresh.setVisible(enabled);
     }
     
 }
