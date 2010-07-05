@@ -1,0 +1,13 @@
+000_classic.map=Classic,classic
+001_cs.map=Little Italy,southern
+002_pacman.map=Jack Man,japan
+003_candc.map=Black's small battle,forest
+004_phlan.map=Pool of Redundancy,medival
+005_arkanoid.map=Darkanoid,comic
+006_cod4.map=Warehouse of Duty,warehouse
+007_paradroid.map=Bombadroid,space
+008_bardstale.map=Skara What?,medival
+009_prison.map=Prison Break,warehouse
+010_soccer.map=Bomba 09,classic
+011_free.map=All For Free,comic
+

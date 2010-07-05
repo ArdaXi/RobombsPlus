@@ -186,7 +186,9 @@ public class ServerBrowser {
 		String serverLine;
 		while((serverLine = serverReader.readLine()) != null)
 		{
-			String[] data = serverLine.split("|");
+			String[] data = serverLine.split("\\|");
+			NetLogger.log(serverLine);
+			NetLogger.log("0:"+data[0]+":1:"+data[1]+":2:"+data[2]+":3:"+data[3]);
 			ServerEntry entry = new ServerEntry(data[0], InetAddress.getByName(data[1]), Integer.parseInt(data[2]), Integer.parseInt(data[3]), true);
 			NetLogger.log("ServerBrowser: Server " + entry.getName() + " added!");
 			servers.add(entry);
