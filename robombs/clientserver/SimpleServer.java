@@ -136,8 +136,8 @@ public class SimpleServer {
                 while (!terminate) {
                     try {
                         NetLogger.log("Server: Broadcasting server data!");
-                        URL masterServer = new URL("http://robombs.arienh4.net/update.php?name="+name+"&port="+tcpPort+"&clients="+clientThreads.size());
-                        masterServer.openConnection().connect();
+                        String data = "name="+URLEncoder.encode(name, "UTF-8")+"&port="+URLEncoder.encode(Integer.toString(tcpPort), "UTF-8")+"&clients="+URLEncoder.encode(Integer.toString(clientThreads.size()), "UTF-8");
+                        new URL("http://robombs.arienh4.net/update.php?"+data).openStream().close();
                         send(bc, bsock, false);
                         Thread.sleep(3000);
                     } catch (Exception e) {
