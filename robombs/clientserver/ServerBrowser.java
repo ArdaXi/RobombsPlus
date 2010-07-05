@@ -1,5 +1,6 @@
 package robombs.clientserver;
 
+import java.io.*;
 import java.net.*;
 import java.util.*;
 
@@ -10,16 +11,23 @@ public class ServerBrowser {
 
     private int port=0;
     private boolean exit=false;
+    private String masterServerURL = "http://robombs.arienh4.net/list.php";
+    private URL masterServer;
     private boolean running=false;
     private List<ServerEntry> servers=new ArrayList<ServerEntry>();
     private List<DataChangeListener> dataChangeListener=new ArrayList<DataChangeListener>();
 
     /**
-     * Creates a new ServerBrowser that will listen on a speficied UDP-port for servers to broadcast their data. This prepares the browser, it doesn't start it.
+     * Creates a new ServerBrowser that will listen on a specified UDP-port for servers to broadcast their data. This prepares the browser, it doesn't start it.
      * @param port the UDP port to use
      */
     public ServerBrowser(int port) {
         this.port=port;
+        try {
+			masterServer = new URL(masterServerURL);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
     }
 
     /**
@@ -32,14 +40,15 @@ public class ServerBrowser {
     }
 
     /**
-     * Starts the browser.
+     * Starts the LAN browser.
      */
     public void startBrowser() {
-        new Thread(new BrowserThread()).start();
+        new Thread(new LANBrowserThread()).start();
+        new Thread(new MasterBrowserThread()).start();
     }
 
     /**
-     * Stops the browser.
+     * Stops the LAN browser.
      */
     public void stopBrowser() {
         exit=true;
@@ -66,9 +75,30 @@ public class ServerBrowser {
     }
 
     /**
-     * The thread that listens on the port for servers to send their data.
+     * The thread that checks with the master server for Internet servers.
      */
-    private class BrowserThread implements Runnable {
+    
+    private class MasterBrowserThread implements Runnable {
+
+		public void run() {
+			try {
+				while(!exit)
+				{
+					refreshServers();
+					Thread.sleep(3000);
+				}
+			} catch (Exception e) {
+				NetLogger.log("Can't start server Internet browser due to: ");
+				e.printStackTrace();
+			}
+		}
+    	
+    }
+    
+    /**
+     * The thread that listens on the port for LAN servers to send their data.
+     */
+    private class LANBrowserThread implements Runnable {
 
         public void run() {
             try {
@@ -89,7 +119,7 @@ public class ServerBrowser {
                         byte[] data = new byte[dpr.getLength()-2];
                         System.arraycopy(dpr.getData(), 2, data, 0, data.length);
                         DataContainer dc = new DataContainer(data, false);
-                        ServerEntry se = new ServerEntry(dc.getNextString(), dpr.getAddress(), dc.getNextInt(), dc.getNextInt());
+                        ServerEntry se = new ServerEntry(dc.getNextString(), dpr.getAddress(), dc.getNextInt(), dc.getNextInt(), false);
                         boolean found = false;
                         synchronized (servers) {
                             for (Iterator<ServerEntry> itty = servers.iterator(); itty.hasNext(); ) {
@@ -126,7 +156,7 @@ public class ServerBrowser {
                     }
                 }
             } catch(Exception e) {
-                NetLogger.log("Can't start server browser due to: ");
+                NetLogger.log("Can't start server LAN browser due to: ");
                 e.printStackTrace();
             }
             running=false;
@@ -136,5 +166,31 @@ public class ServerBrowser {
     public boolean isRunning() {
     	return running;
     }
+
+	/**
+	 * Refreshes servers from master.
+	 * @throws IOException
+	 * @throws UnknownHostException
+	 */
+	public void refreshServers() throws IOException, UnknownHostException {
+		for (Iterator<ServerEntry> iterator = servers.iterator(); iterator.hasNext(); ) {
+			ServerEntry entry = iterator.next();
+			if(entry.isInternet())
+			{
+				iterator.remove();
+				NetLogger.log("ServerBrowser: Server " + entry.getName() + " removed!");
+			}
+		}
+		InputStream serverStream = masterServer.openStream();
+		BufferedReader serverReader = new BufferedReader(new InputStreamReader(serverStream));
+		String serverLine;
+		while((serverLine = serverReader.readLine()) != null)
+		{
+			String[] data = serverLine.split("|");
+			ServerEntry entry = new ServerEntry(data[0], InetAddress.getByName(data[1]), Integer.parseInt(data[2]), Integer.parseInt(data[3]), true);
+			NetLogger.log("ServerBrowser: Server " + entry.getName() + " added!");
+			servers.add(entry);
+		}
+	}
     
 }

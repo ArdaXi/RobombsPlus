@@ -16,6 +16,7 @@ public class ServerEntry implements Comparable<ServerEntry> {
     private InetAddress addr = null;
     private int port = 0;
     private int clients = 0;
+    private boolean internet = false;
     private long lastFound = 0;
     private boolean connected = false;
 
@@ -32,6 +33,23 @@ public class ServerEntry implements Comparable<ServerEntry> {
         this.name = name;
         this.port = port;
         this.clients = clients;
+    }
+    
+    /**
+     * Creates a new ServerEntry
+     * @param name the name of the server. This is not the address but any name like "Peter's server" or something.
+     * @param addr the address of the server
+     * @param port the port of the server
+     * @param clients the number of clients currently connected to that server
+     * @param internet whether this server is on the LAN or on the Internet
+     */
+    public ServerEntry(String name, InetAddress addr, int port, int clients, boolean internet) {
+        lastFound = NetTime.getTime();
+        this.addr = addr;
+        this.name = name;
+        this.port = port;
+        this.clients = clients;
+        this.setInternet(internet);
     }
 
     /**
@@ -90,7 +108,15 @@ public class ServerEntry implements Comparable<ServerEntry> {
         clients = cnt;
     }
 
-    /**
+    public void setInternet(boolean internet) {
+		this.internet = internet;
+	}
+
+	public boolean isInternet() {
+		return internet;
+	}
+
+	/**
      * "Touches" this entry, i.e. isOld will return false after doing this.
      */
     public void touch() {

@@ -1684,7 +1684,7 @@ public class BlueThunderClient extends AbstractClient implements DataTransferLis
 				spawned = false;
 				world.removeAllObjects();
 				// Don't change the unload order to be nice to the TextureManager
-				// One has to know how it works internaly to optimize this, but i do...:-)
+				// One has to know how it works internally to optimize this, but i do...:-)
 				if (coMan!=null) {
 					// Unload player textures!
 					Colorizer.getInstance().unload(buffer);
@@ -1708,5 +1708,9 @@ public class BlueThunderClient extends AbstractClient implements DataTransferLis
 			//System.gc();
 		}
 	}
-
+	
+	public ServerBrowser getBrowser()
+	{
+		return browser;
+	}
 }

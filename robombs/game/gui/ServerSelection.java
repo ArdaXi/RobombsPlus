@@ -1,15 +1,32 @@
 package robombs.game.gui;
 
-import com.threed.jpct.*;
-import com.threed.jpct.util.*;
-import java.util.*;
-import java.net.*;
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import robombs.clientserver.*;
-import robombs.game.*;
-import robombs.game.util.*;
-import robombs.game.sound.*;
-import robombs.game.model.*;
+import robombs.clientserver.DataChangeListener;
+import robombs.clientserver.ServerBrowser;
+import robombs.clientserver.ServerEntry;
+import robombs.clientserver.SimpleServer;
+import robombs.game.BlueThunderClient;
+import robombs.game.BlueThunderServer;
+import robombs.game.Globals;
+import robombs.game.InfoDataContainer;
+import robombs.game.InfoLine;
+import robombs.game.KeyStates;
+import robombs.game.MapInfo;
+import robombs.game.MapList;
+import robombs.game.NetState;
+import robombs.game.model.PlayerInfo;
+import robombs.game.sound.SoundManager;
+import robombs.game.util.MouseMapper;
+import robombs.game.util.SimpleStream;
+
+import com.threed.jpct.FrameBuffer;
+import com.threed.jpct.SimpleVector;
+import com.threed.jpct.Texture;
+import com.threed.jpct.util.KeyMapper;
 
 /**
  * Sets up and manages the server selection window which is displayed after startup and when pressing ESC while playing.
@@ -36,6 +53,7 @@ public class ServerSelection implements DataChangeListener, GUIListener {
     private TextField field = null;
     private TextField portField = null;
     private Button startServer = null;
+    private Button refresh = null;
     private Button connect = null;
     private Button minimize = null;
     private Button close = null;
@@ -64,7 +82,7 @@ public class ServerSelection implements DataChangeListener, GUIListener {
     private Image logoImg=null;
     
     private String state = "State: Looking for servers!";
-    private GameClient client = null;
+    private BlueThunderClient client = null;
     private int guiState=GUI_STATE_INITIAL;
     
     private int mapPos=0;
@@ -81,7 +99,7 @@ public class ServerSelection implements DataChangeListener, GUIListener {
      * @param client the client as an instance of GameClient
      * @throws Exception
      */
-    public ServerSelection(ServerBrowser sb, GameClient client, int height) throws Exception {
+    public ServerSelection(ServerBrowser sb, BlueThunderClient client, int height) throws Exception {
         sb.addListener(this);
         SimpleStream ss = new SimpleStream("data/window.gif");
         backDrop = new Texture(ss.getStream());
@@ -132,6 +150,9 @@ public class ServerSelection implements DataChangeListener, GUIListener {
         connect = new Button(338, 409, 138, 19);
         connect.setLabel("connect");
         
+        refresh = new Button(338, 367, 138, 19);
+        refresh.setLabel("Refresh");
+        
         ready = new Button(185, 409, 138, 19);
         ready.setLabel("ready");
         ready.setVisible(false);
@@ -148,6 +169,7 @@ public class ServerSelection implements DataChangeListener, GUIListener {
         minimize.setListener(this);
         startServer.setListener(this);
         connect.setListener(this);
+        refresh.setListener(this);
         ready.setListener(this);
 
         stateLabel = new Label(24, 470);
@@ -605,6 +627,15 @@ public class ServerSelection implements DataChangeListener, GUIListener {
     	
         if (label.equals("connect")) {
         	connect();
+        }
+        
+        if(label.equals("Refresh"))
+        {
+        	try {
+				client.getBrowser().refreshServers();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
         }
         
         if (label.equals("End game")) {
