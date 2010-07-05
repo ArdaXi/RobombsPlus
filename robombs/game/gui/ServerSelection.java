@@ -204,6 +204,7 @@ public class ServerSelection implements DataChangeListener, GUIListener {
         window.add(field);
         window.add(portField);
         window.add(connect);
+        window.add(refresh);
         window.add(startServer);
         window.add(close);
         window.add(minimize);
