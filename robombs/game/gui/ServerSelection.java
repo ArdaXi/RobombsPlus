@@ -53,7 +53,6 @@ public class ServerSelection implements DataChangeListener, GUIListener {
     private TextField field = null;
     private TextField portField = null;
     private Button startServer = null;
-    private Button refresh = null;
     private Button connect = null;
     private Button minimize = null;
     private Button close = null;
@@ -150,8 +149,6 @@ public class ServerSelection implements DataChangeListener, GUIListener {
         connect = new Button(338, 409, 138, 19);
         connect.setLabel("connect");
         
-        refresh = new Button(338, 313, 138, 19);
-        refresh.setLabel("Refresh");
         
         ready = new Button(185, 409, 138, 19);
         ready.setLabel("ready");
@@ -169,7 +166,6 @@ public class ServerSelection implements DataChangeListener, GUIListener {
         minimize.setListener(this);
         startServer.setListener(this);
         connect.setListener(this);
-        refresh.setListener(this);
         ready.setListener(this);
 
         stateLabel = new Label(24, 470);
@@ -204,7 +200,6 @@ public class ServerSelection implements DataChangeListener, GUIListener {
         window.add(field);
         window.add(portField);
         window.add(connect);
-        window.add(refresh);
         window.add(startServer);
         window.add(close);
         window.add(minimize);
@@ -630,15 +625,6 @@ public class ServerSelection implements DataChangeListener, GUIListener {
         	connect();
         }
         
-        if(label.equals("Refresh"))
-        {
-        	try {
-				client.getBrowser().refreshServers();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-        }
-        
         if (label.equals("End game")) {
         	 BlueThunderServer server=client.getServerImpl();
         	 InfoDataContainer idc=new InfoDataContainer();
@@ -906,7 +892,6 @@ public class ServerSelection implements DataChangeListener, GUIListener {
 		nameLabel.setVisible(enabled);
 		startServer.setVisible(enabled);
 		ready.setVisible(enabled);
-		refresh.setVisible(enabled);
     }
     
 }

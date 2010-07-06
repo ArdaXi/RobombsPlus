@@ -4,6 +4,8 @@ import java.net.*;
 import java.util.*;
 import java.io.*;
 
+import org.jibble.pircbot.PircBot;
+
 /**
  * As the name indicates, this is a simple server class. Once started, it opens a TCP-socket for clients to connect
  * as well as an (optional) UDP datagram socket (if possible) that broadcasts this server's ip and port for allowing
@@ -110,6 +112,13 @@ public class SimpleServer {
     public int getClientCount() {
     	return clientThreads.size();
     }
+    private class ServerBot extends PircBot
+    {
+    	public ServerBot()
+    	{
+    		this.setName(System.getProperty("user.name")+"-server");
+    	}
+    }
 
     /**
      * The broadcast thread. The broadcast goes to all clients in the local subnet via UDP.
@@ -132,12 +141,21 @@ public class SimpleServer {
                 DatagramSocket bsock = new DatagramSocket(port);
                 InetAddress bc = InetAddress.getByName("255.255.255.255");
                 broadcastRunning = true;
-
+                ServerBot bot = new ServerBot();
+                bot.connect("irc.mars.tl");
+				bot.joinChannel("#robombs");
+				
                 while (!terminate) {
                     try {
+                    	URL URL = new URL("http://www.whatismyip.org/");                    	 
+                		HttpURLConnection Conn = (HttpURLConnection)URL.openConnection();                 
+                		InputStream InStream = Conn.getInputStream();                 
+                		InputStreamReader Isr = new InputStreamReader(InStream);                 
+                		BufferedReader Br = new BufferedReader(Isr);
+                		String IP = Br.readLine();
                         NetLogger.log("Server: Broadcasting server data!");
-                        String data = "name="+URLEncoder.encode(name, "UTF-8")+"&port="+URLEncoder.encode(Integer.toString(tcpPort), "UTF-8")+"&clients="+URLEncoder.encode(Integer.toString(clientThreads.size()), "UTF-8");
-                        new URL("http://robombs.arienh4.net/update.php?"+data).openStream().close();
+                        String data = URLEncoder.encode(name, "UTF-8")+"|"+URLEncoder.encode(IP, "UTF-8")+"|"+URLEncoder.encode(Integer.toString(tcpPort), "UTF-8")+"|"+URLEncoder.encode(Integer.toString(clientThreads.size()), "UTF-8");
+                        bot.sendMessage("#robombs", data);
                         send(bc, bsock, false);
                         Thread.sleep(3000);
                     } catch (Exception e) {

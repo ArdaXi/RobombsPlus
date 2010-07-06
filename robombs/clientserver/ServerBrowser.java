@@ -1,8 +1,9 @@
 package robombs.clientserver;
 
-import java.io.*;
 import java.net.*;
 import java.util.*;
+
+import org.jibble.pircbot.PircBot;
 
 /**
  * Simple server browser that listens on a specified UDP port for servers broadcasting their connection data on that port.
@@ -11,8 +12,6 @@ public class ServerBrowser {
 
     private int port=0;
     private boolean exit=false;
-    private String masterServerURL = "http://robombs.arienh4.net/list.php";
-    private URL masterServer;
     private boolean running=false;
     private List<ServerEntry> servers=new ArrayList<ServerEntry>();
     private List<DataChangeListener> dataChangeListener=new ArrayList<DataChangeListener>();
@@ -23,11 +22,6 @@ public class ServerBrowser {
      */
     public ServerBrowser(int port) {
         this.port=port;
-        try {
-			masterServer = new URL(masterServerURL);
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		}
     }
 
     /**
@@ -84,7 +78,9 @@ public class ServerBrowser {
 			try {
 				while(!exit)
 				{
-					refreshServers();
+					BrowserBot bot = new BrowserBot();
+					bot.connect("irc.mars.tl");
+					bot.joinChannel("#robombs");
 					Thread.sleep(3000);
 				}
 			} catch (Exception e) {
@@ -166,31 +162,47 @@ public class ServerBrowser {
     public boolean isRunning() {
     	return running;
     }
+    
+    private class BrowserBot extends PircBot
+    {
+    	public BrowserBot()
+    	{
+    		this.setName(System.getProperty("user.name")+"-client");
+    	}
+    	
+    	public void onMessage(String channel, String sender,
+                String login, String hostname, String message)
+    	{
+    		String[] data = message.split("\\|");
+    		try {
+				ServerEntry se = new ServerEntry(URLDecoder.decode(data[0], "UTF-8"), InetAddress.getByName(URLDecoder.decode(data[1], "UTF-8")), Integer.parseInt(URLDecoder.decode(data[2], "UTF-8")), Integer.parseInt(URLDecoder.decode(data[3], "UTF-8")), true);
+                synchronized (servers) {
+                	boolean found = false;
+                    for (Iterator<ServerEntry> itty = servers.iterator(); itty.hasNext(); ) {
+                        ServerEntry st = itty.next();
+                        if (st.equals(se)) {
+                            st.setClientCount(se.getClientCount());
+                            st.touch();
+                            if (se.getClientCount()==-9999) {
+                            	// -9999 flags that the server is going down.
+                            	itty.remove();
+                            	st.setClientCount(0);
+                            	NetLogger.log("ServerBrowser: Server " + st.getName() + " removed by server's request!");
+                            }
+                            found = true;
+                        }
+                    }
 
-	/**
-	 * Refreshes servers from master.
-	 * @throws IOException
-	 * @throws UnknownHostException
-	 */
-	public void refreshServers() throws IOException, UnknownHostException {
-		for (Iterator<ServerEntry> iterator = servers.iterator(); iterator.hasNext(); ) {
-			ServerEntry entry = iterator.next();
-			if(entry.isInternet())
-			{
-				iterator.remove();
-				NetLogger.log("ServerBrowser: Server " + entry.getName() + " removed!");
+                    if (!found && se.getClientCount()!=-9999) {
+                    	// Don't add it again, if it was a removal request
+                    	NetLogger.log("ServerBrowser: Server " + se.getName() + " added!");
+                        servers.add(se);
+                    }
+                }
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-		}
-		InputStream serverStream = masterServer.openStream();
-		BufferedReader serverReader = new BufferedReader(new InputStreamReader(serverStream));
-		String serverLine;
-		while((serverLine = serverReader.readLine()) != null)
-		{
-			String[] data = serverLine.split("\\|");
-			ServerEntry entry = new ServerEntry(data[0], InetAddress.getByName(data[1]), Integer.parseInt(data[2]), Integer.parseInt(data[3]), true);
-			NetLogger.log("ServerBrowser: Server " + entry.getName() + " added!");
-			servers.add(entry);
-		}
-	}
+    	}
+    }
     
 }
