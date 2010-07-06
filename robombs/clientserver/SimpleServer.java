@@ -4,7 +4,7 @@ import java.net.*;
 import java.util.*;
 import java.io.*;
 
-import org.jibble.pircbot.PircBot;
+import robombs.game.ServerBot;
 
 /**
  * As the name indicates, this is a simple server class. Once started, it opens a TCP-socket for clients to connect
@@ -112,13 +112,6 @@ public class SimpleServer {
     public int getClientCount() {
     	return clientThreads.size();
     }
-    private class ServerBot extends PircBot
-    {
-    	public ServerBot()
-    	{
-    		this.setName(System.getProperty("user.name")+"-server");
-    	}
-    }
 
     /**
      * The broadcast thread. The broadcast goes to all clients in the local subnet via UDP.
@@ -141,13 +134,11 @@ public class SimpleServer {
                 DatagramSocket bsock = new DatagramSocket(port);
                 InetAddress bc = InetAddress.getByName("255.255.255.255");
                 broadcastRunning = true;
-                ServerBot bot = new ServerBot();
-                bot.connect("irc.mars.tl");
-				bot.joinChannel("#robombs");
+                ServerBot bot = ServerBot.get();
 				
                 while (!terminate) {
                     try {
-                    	URL URL = new URL("http://www.whatismyip.org/");                    	 
+                    	URL URL = new URL("http://robombs.arienh4.net/ip.php");                    	 
                 		HttpURLConnection Conn = (HttpURLConnection)URL.openConnection();                 
                 		InputStream InStream = Conn.getInputStream();                 
                 		InputStreamReader Isr = new InputStreamReader(InStream);                 
@@ -160,7 +151,7 @@ public class SimpleServer {
                         Thread.sleep(3000);
                     } catch (Exception e) {
                         // Don't stop...just take notice!
-                        NetLogger.log("Server: Broadcast interrupted!");
+                        e.printStackTrace();
                     }
                 }
                 

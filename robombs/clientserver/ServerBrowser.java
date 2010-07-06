@@ -1,15 +1,20 @@
 package robombs.clientserver;
 
-import java.net.*;
-import java.util.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
-import org.jibble.pircbot.PircBot;
+import robombs.game.ServerBot;
 
 /**
  * Simple server browser that listens on a specified UDP port for servers broadcasting their connection data on that port.
  */
 public class ServerBrowser {
 
+	public ServerBot bot;
     private int port=0;
     private boolean exit=false;
     private boolean running=false;
@@ -22,6 +27,8 @@ public class ServerBrowser {
      */
     public ServerBrowser(int port) {
         this.port=port;
+        bot = ServerBot.get();
+        bot.setServers(servers);
     }
 
     /**
@@ -38,7 +45,6 @@ public class ServerBrowser {
      */
     public void startBrowser() {
         new Thread(new LANBrowserThread()).start();
-        new Thread(new MasterBrowserThread()).start();
     }
 
     /**
@@ -66,29 +72,6 @@ public class ServerBrowser {
             DataChangeListener dcl = itty.next();
             dcl.dataChanged(getServerList());
         }
-    }
-
-    /**
-     * The thread that checks with the master server for Internet servers.
-     */
-    
-    private class MasterBrowserThread implements Runnable {
-
-		public void run() {
-			try {
-				while(!exit)
-				{
-					BrowserBot bot = new BrowserBot();
-					bot.connect("irc.mars.tl");
-					bot.joinChannel("#robombs");
-					Thread.sleep(3000);
-				}
-			} catch (Exception e) {
-				NetLogger.log("Can't start server Internet browser due to: ");
-				e.printStackTrace();
-			}
-		}
-    	
     }
     
     /**
@@ -161,48 +144,6 @@ public class ServerBrowser {
     
     public boolean isRunning() {
     	return running;
-    }
-    
-    private class BrowserBot extends PircBot
-    {
-    	public BrowserBot()
-    	{
-    		this.setName(System.getProperty("user.name")+"-client");
-    	}
-    	
-    	public void onMessage(String channel, String sender,
-                String login, String hostname, String message)
-    	{
-    		String[] data = message.split("\\|");
-    		try {
-				ServerEntry se = new ServerEntry(URLDecoder.decode(data[0], "UTF-8"), InetAddress.getByName(URLDecoder.decode(data[1], "UTF-8")), Integer.parseInt(URLDecoder.decode(data[2], "UTF-8")), Integer.parseInt(URLDecoder.decode(data[3], "UTF-8")), true);
-                synchronized (servers) {
-                	boolean found = false;
-                    for (Iterator<ServerEntry> itty = servers.iterator(); itty.hasNext(); ) {
-                        ServerEntry st = itty.next();
-                        if (st.equals(se)) {
-                            st.setClientCount(se.getClientCount());
-                            st.touch();
-                            if (se.getClientCount()==-9999) {
-                            	// -9999 flags that the server is going down.
-                            	itty.remove();
-                            	st.setClientCount(0);
-                            	NetLogger.log("ServerBrowser: Server " + st.getName() + " removed by server's request!");
-                            }
-                            found = true;
-                        }
-                    }
-
-                    if (!found && se.getClientCount()!=-9999) {
-                    	// Don't add it again, if it was a removal request
-                    	NetLogger.log("ServerBrowser: Server " + se.getName() + " added!");
-                        servers.add(se);
-                    }
-                }
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-    	}
     }
     
 }
