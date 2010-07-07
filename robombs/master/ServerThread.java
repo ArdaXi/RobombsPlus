@@ -23,11 +23,12 @@ public class ServerThread extends Thread {
 			PrintWriter out = new PrintWriter(socket.getOutputStream());
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket
 					.getInputStream()));
-			out.println("ready");
 			String type = in.readLine();
-			while (socket.isClosed() == false) {
+			String line;
+			while ((line = in.readLine()) != null) {
 				if (type == "server") {
-					ServerEntry se = ServerEntry.parse(in.readLine());
+					ServerEntry se = ServerEntry.parse(line, socket.getInetAddress());
+					servers.put(se);
 					boolean found = false;
 					synchronized (servers) {
 						for (Iterator<ServerEntry> itty = servers.iterator(); itty
@@ -62,7 +63,7 @@ public class ServerThread extends Thread {
 					}
 				} else if (type == "client")
 				{
-					String request = in.readLine();
+					String request = line;
 					if(request == "query")
 					{
 						synchronized(servers)

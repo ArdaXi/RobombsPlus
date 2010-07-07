@@ -27,9 +27,13 @@ public final class ServerList implements Iterable<ServerEntry> {
 		return servers.iterator();
 	}
 	
-	public void add(ServerEntry se) throws InterruptedException
+	public void add(ServerEntry se)
 	{
 		servers.add(se);
+	}
+	
+	public void put(ServerEntry se) throws InterruptedException
+	{
 		for(ServerThread client : clients)
 		{
 			client.put(se);

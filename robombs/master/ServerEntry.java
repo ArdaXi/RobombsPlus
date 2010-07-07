@@ -19,10 +19,10 @@ import java.net.UnknownHostException;
 			}
 		}
 
-		public static ServerEntry parse(String toParse) throws NumberFormatException, UnsupportedEncodingException, UnknownHostException
+		public static ServerEntry parse(String toParse, InetAddress IP) throws NumberFormatException, UnsupportedEncodingException, UnknownHostException
 		{
 			String[] data = toParse.split("\\|");
-			return new ServerEntry(URLDecoder.decode(data[0], "UTF-8"), InetAddress.getByName(URLDecoder.decode(data[1], "UTF-8")), Integer.parseInt(URLDecoder.decode(data[2], "UTF-8")), Integer.parseInt(URLDecoder.decode(data[3], "UTF-8")), true);
+			return new ServerEntry(URLDecoder.decode(data[0], "UTF-8"), IP, Integer.parseInt(URLDecoder.decode(data[1], "UTF-8")), Integer.parseInt(URLDecoder.decode(data[2], "UTF-8")), true);
 		}
 		
 		private static class NetTime {
